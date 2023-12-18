@@ -7,7 +7,7 @@ import PrimaryButton from "@/Components/PrimaryButton";
 import {Game} from "@/types/game";
 
 export default function JoinGame({ game } : { game: Game }) {
-    const { data, setData, post, processing, errors, reset } = useForm({
+    const { data, setData, post, processing, errors } = useForm({
         gameCode: '',
         remember: false,
     });

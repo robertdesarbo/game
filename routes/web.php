@@ -25,6 +25,10 @@ Route::post('join-team', [HomeController::class, 'joinTeam'])
     ->name('join-team');
 Route::get('/game/{id}', [GameRoomController::class, '__invoke'])
     ->name('game');
+Route::get('/game/{id}/buzzer', [GameRoomController::class, 'buzzer'])
+    ->name('buzzer');
+Route::post('/game/{id}/buzzer', [GameRoomController::class, 'incomingBuzzer'])
+    ->name('buzzer.update');
 
 Route::get('/dashboard', function () {
     return Inertia::render('Dashboard');

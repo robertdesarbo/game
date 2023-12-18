@@ -4,8 +4,11 @@ import '../css/app.css';
 import { createRoot } from 'react-dom/client';
 import { createInertiaApp } from '@inertiajs/react';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
+import Pusher from "pusher-js";
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
+
+window.Pusher = Pusher;
 
 createInertiaApp({
     title: (title) => `${title} - ${appName}`,

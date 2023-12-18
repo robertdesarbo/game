@@ -16,3 +16,7 @@ export interface GameRoom {
     metaData: Category[];
     teams: string
 }
+
+export interface Buzzer {
+    gameRoom: string;
+}
