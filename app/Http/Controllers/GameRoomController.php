@@ -16,7 +16,7 @@ class GameRoomController extends Controller {
 
         return Inertia::render('Game/GameRoom', [
             'game' => $gameRoom->game,
-            'game_instructions' => $gameRoom->universe->meta_data,
+            'metaData' => $gameRoom->universe->meta_data,
             'teams' => $gameRoom->teams
         ]);
     }

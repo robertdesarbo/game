@@ -12,6 +12,10 @@ class GameUniverse extends Model
 
     protected $table = 'game_universe';
 
+    protected $casts = [
+        'meta_data' => 'array'
+    ];
+
     public function room(): HasOne
     {
         return $this->HasOne(GameRoom::class);
