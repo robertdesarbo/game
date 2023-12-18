@@ -36,7 +36,7 @@ export default function GameLogin(gameRoom: GameRoom) {
                                            onClick={() => {showQuestion(question.question)}}
                                            key={question.question}
                                            className="cursor-pointer p-4 text-7xl font-semibold bg-[#020978] text-[#D7A14A] flex items-center justify-center">
-                                           ${question.order}00
+                                           ${question.order * category.multiplier * 100}
                                        </div>
                                    );
                                })}

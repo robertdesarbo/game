@@ -6,6 +6,7 @@ interface Question {
 
 interface Category {
     title: string;
+    multiplier: number;
     round: number,
     questions: Question[];
 }
