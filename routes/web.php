@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\GameRoomController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -16,11 +17,14 @@ use Inertia\Inertia;
 |
 */
 
-Route::get('/', [HomeController::class, 'index']);
+Route::get('/', [HomeController::class, 'index'])
+    ->name('home');
 Route::post('join-game', [HomeController::class, 'joinGame'])
     ->name('join-game');
 Route::post('join-team', [HomeController::class, 'joinTeam'])
     ->name('join-team');
+Route::get('/game/{id}', [GameRoomController::class, '__invoke'])
+    ->name('game');
 
 Route::get('/dashboard', function () {
     return Inertia::render('Dashboard');

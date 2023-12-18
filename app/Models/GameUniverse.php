@@ -4,13 +4,16 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class GameUniverse extends Model
 {
     use HasFactory;
 
-    public function gameRoom(): BelongsTo
+    protected $table = 'game_universe';
+
+    public function room(): HasOne
     {
-        return $this->belongsTo(GameRoom::class);
+        return $this->HasOne(GameRoom::class);
     }
 }

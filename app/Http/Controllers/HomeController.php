@@ -15,32 +15,49 @@ use Illuminate\Support\Facades\Route;
 class HomeController extends Controller {
     public function index(Request $request): Response
     {
+        $game = null;
+        if ($request->session()->get('game')) {
+            $game = [
+                'id' => $request->session()->get('game.id'),
+                'hasTeams' => $request->session()->get('game.hasTeams'),
+                'teams' => $request->session()->get('game.teams'),
+            ];
+        }
+
         return Inertia::render('Welcome', [
             'canLogin' => Route::has('login'),
             'canRegister' => Route::has('register'),
             'laravelVersion' => Application::VERSION,
             'phpVersion' => PHP_VERSION,
+            'game' => $game
         ]);
     }
 
-    public function joinGame(Request $request): Response
+    public function joinGame(Request $request): RedirectResponse
     {
         $request->validate([
             'gameCode' => 'required|exists:App\Models\GameRoom,code',
         ]);
 
-        $gameRoom = GameRoom::where('code', $request->gameCode)->first();
+        $gameRoom = GameRoom::with('teams')
+                        ->where('code', $request->gameCode)
+                        ->first();
 
-        return Inertia::render('Welcome', [
-            'canLogin' => Route::has('login'),
-            'canRegister' => Route::has('register'),
-            'laravelVersion' => Application::VERSION,
-            'phpVersion' => PHP_VERSION,
-            'game' => [
-                'id' => $gameRoom->id,
-                'hasTeams' => $gameRoom->has_teams,
+
+        $teams = $gameRoom->teams->map(function ($team) {
+            return ['value' => $team->id, 'label' => $team->team_name];
+        });
+
+        return redirect()->route('home')->with(
+            [
+                'game' =>
+                [
+                    'id' => $gameRoom->id,
+                    'hasTeams' => $gameRoom->has_teams,
+                    'teams' => $teams,
+                ]
             ]
-        ]);
+        );
     }
 
     public function joinTeam(ProfileUpdateRequest $request): RedirectResponse
