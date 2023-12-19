@@ -1,11 +1,13 @@
 import {Head} from "@inertiajs/react";
-import {GameRoom} from "@/types/gameRoom";
+import { GameRoom as GameRoomType } from "@/types/gameRoom";
 import {useState} from "react";
-import { Modal } from 'antd';
+import { Modal, notification } from 'antd';
+import BuzzerListen from "@/Pages/Game/BuzzerListen";
 
-export default function GameLogin(gameRoom: GameRoom) {
+export default function GameRoom(gameRoom: GameRoomType) {
     const [question, setQuestion] = useState('');
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [api, contextHolder] = notification.useNotification();
 
     const showQuestion = (question) => {
         setQuestion(question);
@@ -20,14 +22,26 @@ export default function GameLogin(gameRoom: GameRoom) {
         setIsModalOpen(false);
     };
 
+    const listenerCallback = (data) => {
+        const user = data.users[data.users.length - 1];
+
+        api.info({
+            placement: "topLeft",
+            message: `${user} buzzed in`,
+            duration: 0,
+        });
+    };
+
     return (
         <>
             <Head title="Game Room"/>
-            <div className="grid grid-cols-6 gap-4 bg-black py-2">
+            <BuzzerListen id={gameRoom.id} listenerCallback={listenerCallback}/>
+            {contextHolder}
+            <div className="h-screen w-screen px-2 grid grid-cols-6 gap-4 bg-black py-2 text-center">
                    {gameRoom.metaData.categories.map((category) => {
                        return (
                            <div key={category.name} className="grid grid-cols-1 gap-4 grid-rows-6">
-                               <div className="p-4 text-3xl font-bold bg-[#020978] text-white flex items-center justify-center">
+                               <div className="p-1 text-3xl font-bold bg-[#020978] text-white flex items-center justify-center">
                                    {category.name}
                                </div>
                                {category.questions.map((question) => {
@@ -35,7 +49,7 @@ export default function GameLogin(gameRoom: GameRoom) {
                                        <div
                                            onClick={() => {showQuestion(question.question)}}
                                            key={question.question}
-                                           className="cursor-pointer p-4 text-7xl font-semibold bg-[#020978] text-[#D7A14A] flex items-center justify-center">
+                                           className="cursor-pointer text-6xl font-semibold bg-[#020978] text-[#D7A14A] flex items-center justify-center">
                                            ${question.order * category.multiplier * 100}
                                        </div>
                                    );

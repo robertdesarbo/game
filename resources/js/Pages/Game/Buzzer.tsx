@@ -1,7 +1,7 @@
 import {Head, useForm} from "@inertiajs/react";
 import {Buzzer as BuzzerType} from "@/types/gameRoom";
-import { useState, useEffect } from "react";
-import Echo from "laravel-echo";
+import { useState } from "react";
+import BuzzerListen from "@/Pages/Game/BuzzerListen";
 
 export default function Buzzer(buzzer: BuzzerType) {
     const { post } = useForm({
@@ -18,14 +18,6 @@ export default function Buzzer(buzzer: BuzzerType) {
 
     const [isClicked, setIsClicked] = useState(false);
 
-    useEffect(() => {
-        const echo = new Echo(options);
-        echo.channel('buzzer')
-            .listen(`.game.room.${buzzer.gameRoom.id}.buzzer`, (e) => {
-                console.log(e);
-            });
-    }, []);
-
     const submitBuzz = (question) => {
         post((`/game/${buzzer.gameRoom.id}/buzzer`), {
             preserveScroll: true
@@ -34,9 +26,15 @@ export default function Buzzer(buzzer: BuzzerType) {
         setIsClicked(true);
     };
 
+    const listenerCallback = (data) => {
+        console.log('here');
+        console.log(data);
+    };
+
     return (
         <>
             <Head title="Game Room"/>
+            <BuzzerListen id={buzzer.gameRoom.id} listenerCallback={listenerCallback}/>
             <form
                 className={`h-screen w-screen transition duration-150 ease-out ${ isClicked ? 'bg-green-400' : 'bg-amber-50'}`}
                 onClick={() => {submitBuzz()}}
