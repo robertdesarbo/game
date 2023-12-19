@@ -5,7 +5,8 @@ import BuzzerListen from "@/Pages/Game/BuzzerListen";
 
 export default function Buzzer(buzzer: BuzzerType) {
     const { post } = useForm({
-        id: buzzer.gameRoom.id
+        id: buzzer.gameRoom.id,
+        buzzed_in_user: 'Robert DeSarbo'
     });
 
     const options = {
@@ -19,6 +20,11 @@ export default function Buzzer(buzzer: BuzzerType) {
     const [isClicked, setIsClicked] = useState(false);
 
     const submitBuzz = (question) => {
+        if (isClicked) {
+            // Prevent spam
+            return;
+        }
+
         post((`/game/${buzzer.gameRoom.id}/buzzer`), {
             preserveScroll: true
         });
@@ -37,7 +43,7 @@ export default function Buzzer(buzzer: BuzzerType) {
             <BuzzerListen id={buzzer.gameRoom.id} listenerCallback={listenerCallback}/>
             <form
                 className={`h-screen w-screen transition duration-150 ease-out ${ isClicked ? 'bg-green-400' : 'bg-amber-50'}`}
-                onClick={() => {submitBuzz()}}
+                onDoubleClickCapture={() => {submitBuzz()}}
             >
             </form>
         </>

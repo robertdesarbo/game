@@ -40,17 +40,14 @@ class GameRoomController extends Controller {
         $buzzerUsers = collect(json_decode(Redis::get($buzzerKey) ?? '', true));
 
         // Prevent duplicate buzzers
-        if(!$buzzerUsers->contains('Bert')) {
-            $buzzerUsers->add('Desk');
-            $buzzerUsers->add('Bert');
+        if(!$buzzerUsers->contains($request->buzzed_in_user)) {
+            // Save list of buzzed in users
+            Redis::set($buzzerKey,  $buzzerUsers->add($request->buzzed_in_user)->toJson());
+
+            $gameRoom = GameRoom::where('id', $id) ->first();
+
+            Buzzer::dispatch($gameRoom, $buzzerUsers->toArray());
         }
-
-        // Save list of buzzed in users
-        Redis::set($buzzerKey, $buzzerUsers->toJson());
-
-        $gameRoom = GameRoom::where('id', $id) ->first();
-
-        Buzzer::dispatch($gameRoom, $buzzerUsers->toArray());
     }
 
     public function answer(Request $request, string $id): void
