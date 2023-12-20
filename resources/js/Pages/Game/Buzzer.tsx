@@ -6,7 +6,8 @@ import BuzzerListen from "@/Pages/Game/BuzzerListen";
 export default function Buzzer(buzzer: BuzzerType) {
     const { post } = useForm({
         id: buzzer.gameRoom.id,
-        buzzed_in_user: 'Robert DeSarbo'
+        user: buzzer.user,
+        team_name: buzzer.teamName,
     });
 
     const options = {
@@ -19,7 +20,7 @@ export default function Buzzer(buzzer: BuzzerType) {
 
     const [isClicked, setIsClicked] = useState(false);
 
-    const submitBuzz = (question) => {
+    const submitBuzz = () => {
         if (isClicked) {
             // Prevent spam
             return;
@@ -32,7 +33,7 @@ export default function Buzzer(buzzer: BuzzerType) {
         setIsClicked(true);
     };
 
-    const listenerCallback = (data) => {
+    const listenerCallback = (data: any) => {
         console.log('here');
         console.log(data);
     };

@@ -9,7 +9,7 @@ export default function GameRoom(gameRoom: GameRoomType) {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [api, contextHolder] = notification.useNotification();
 
-    const showQuestion = (question) => {
+    const showQuestion = (question: string) => {
         setQuestion(question);
         setIsModalOpen(true);
     };
@@ -22,12 +22,12 @@ export default function GameRoom(gameRoom: GameRoomType) {
         setIsModalOpen(false);
     };
 
-    const listenerCallback = (data) => {
+    const listenerCallback = (data: any) => {
         const user = data.users[data.users.length - 1];
 
         api.info({
             placement: "topLeft",
-            message: `${user} buzzed in`,
+            message: `${user?.name} buzzed in (${user?.teamName})`,
             duration: 0,
         });
     };

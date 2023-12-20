@@ -18,13 +18,14 @@ export default function JoinRoom({ game } : { game: Game } ) {
     const JoinRoom: FormEventHandler = (e) => {
         e.preventDefault();
 
-        post(route('join-room'));
+        post(route(`game`, {
+            id: game.id
+        }));
     };
 
     return (
         <>
             <form onSubmit={JoinRoom}>
-
                 <div className="mb-4">
                     <InputLabel htmlFor="email" value="Name"/>
 
@@ -45,9 +46,12 @@ export default function JoinRoom({ game } : { game: Game } ) {
                 {game?.id && game?.hasTeams &&
                     <div>
                         <Select
+                            id="team"
+                            name="team"
                             placeholder="Team"
                             className="h-11 w-full"
                             options={game?.teams}
+                            onChange={(value, option) => setData('team', option?.label)}
                         />
 
                         <InputError message={errors.name} className="mt-2"/>

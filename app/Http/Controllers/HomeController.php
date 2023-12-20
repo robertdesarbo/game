@@ -2,15 +2,14 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\ProfileUpdateRequest;
 use App\Models\GameRoom;
 use Illuminate\Foundation\Application;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Redirect;
 use Inertia\Inertia;
 use Inertia\Response;
 use Illuminate\Support\Facades\Route;
+use Firebase\JWT\JWT;
 
 class HomeController extends Controller {
     public function index(Request $request): Response
@@ -43,10 +42,14 @@ class HomeController extends Controller {
                         ->where('code', $request->gameCode)
                         ->first();
 
-
         $teams = $gameRoom->teams->map(function ($team) {
             return ['value' => $team->id, 'label' => $team->team_name];
         });
+
+        // Create JWT
+        $payload = [
+            'game_room_id' => $gameRoom->id,
+        ];
 
         return redirect()->route('home')->with(
             [
@@ -57,19 +60,8 @@ class HomeController extends Controller {
                     'teams' => $teams,
                 ]
             ]
+        )->withCookie(
+        'game_room_jwt', JWT::encode($payload, env('JWT_SECRET_KEY'), 'HS256')
         );
-    }
-
-    public function joinTeam(ProfileUpdateRequest $request): RedirectResponse
-    {
-        $request->user()->fill($request->validated());
-
-        if ($request->user()->isDirty('email')) {
-            $request->user()->email_verified_at = null;
-        }
-
-        $request->user()->save();
-
-        return Redirect::route('game-room');
     }
 }

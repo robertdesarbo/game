@@ -1,5 +1,5 @@
 import JoinGame from "@/Pages/Game/JoinGame";
-import JoinTeam from "@/Pages/Game/JoinTeam";
+import JoinRoom from "@/Pages/Game/JoinRoom";
 import {Game} from "@/types/game";
 
 export default function GameLogin({ game } : { game: Game }) {
@@ -8,7 +8,7 @@ export default function GameLogin({ game } : { game: Game }) {
             <JoinGame game={game} />
             {game?.id &&
                 <div className="mt-4">
-                    <JoinTeam game={game} />
+                    <JoinRoom game={game} />
                 </div>
             }
         </>

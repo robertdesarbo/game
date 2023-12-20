@@ -4,19 +4,26 @@ interface Question {
     isDailyDouble?: boolean;
 }
 
+interface Categories {
+    categories: Category[]
+}
+
 interface Category {
-    title: string;
+    name: string;
     multiplier: number;
     round: number,
     questions: Question[];
 }
 
 export interface GameRoom {
+    id: string;
     game: string;
-    metaData: Category[];
+    metaData: Categories;
     teams: string
 }
 
 export interface Buzzer {
-    gameRoom: string;
+    gameRoom: GameRoom;
+    teamName: string;
+    user: string;
 }
