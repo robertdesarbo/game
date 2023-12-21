@@ -42,6 +42,8 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/game/{id}', [GameRoomController::class, '__invoke'])
         ->name('game');
+    Route::post('/game/{id}', [GameRoomController::class, 'answer'])
+        ->name('game');
 });
 
 require __DIR__.'/auth.php';

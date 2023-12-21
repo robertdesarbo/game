@@ -15,11 +15,16 @@ interface Category {
     questions: Question[];
 }
 
+interface Team {
+    id: number;
+    team_name: string;
+}
+
 export interface GameRoom {
     id: string;
     game: string;
     metaData: Categories;
-    teams: string
+    teams: Team[]
 }
 
 export interface Buzzer {
