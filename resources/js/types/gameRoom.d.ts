@@ -20,11 +20,24 @@ interface Team {
     team_name: string;
 }
 
+interface Score {
+    team_id: number;
+    score: number;
+}
+
 export interface GameRoom {
     id: string;
     game: string;
     metaData: Categories;
-    teams: Team[]
+    teams: Team[];
+    scores: Score[];
+}
+
+export interface UserGameRoom {
+    joined_room: boolean;
+    game_room_id: string;
+    team_name: string;
+    name: string;
 }
 
 export interface Buzzer {

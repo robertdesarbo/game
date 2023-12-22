@@ -21,8 +21,8 @@ export default function GameRoom(gameRoom: GameRoomType) {
         gameRoom.teams.map((team) => {
             setTeamScore((previousScore) => ({
                 ...previousScore,
-                [team.id]: 0
-            }));
+                [team.id]: gameRoom.scores.find((score) => score.team_id === team.id)?.score ?? 0
+        }));
         });
     }, []);
 
@@ -34,7 +34,7 @@ export default function GameRoom(gameRoom: GameRoomType) {
             setIsDrawerOpen(!isDrawerOpen)
         } else if (event.shiftKey && event.key === 'C') {
             // correct answer
-            axios.post(route(`game`, {
+            axios.post(route(`answer`, {
                 id: 1,
                 question_id: activeQuestionId,
                 team_id: activeTeamId,
@@ -52,7 +52,7 @@ export default function GameRoom(gameRoom: GameRoomType) {
             console.log('correct');
         } else if (event.shiftKey && event.key === 'W') {
             // incorrect answer
-            axios.post(route(`game`, {
+            axios.post(route(`answer`, {
                 id: 1,
                 question_id: activeQuestionId,
                 team_id: activeTeamId,
@@ -99,12 +99,12 @@ export default function GameRoom(gameRoom: GameRoomType) {
                 <Head title="Game Room"/>
                 <BuzzerListen id={gameRoom.id} listenerCallback={listenerCallback}/>
                 {contextHolder}
-                <div className="h-screen w-screen px-2 grid grid-cols-6 gap-4 bg-black py-2 text-center">
+                <div className="px-2 grid grid-cols-6 gap-4 bg-black text-center">
                     {gameRoom.metaData.categories.map((category) => {
                         return (
-                            <div key={category.name} className="grid grid-cols-1 gap-4 grid-rows-6">
+                            <div key={category.name} className="py-2 h-screen grid gap-4 grid-rows-6">
                                 <div
-                                    className="p-1 text-3xl font-bold bg-[#020978] text-white flex items-center justify-center">
+                                    className="p-1 text-xs lg:text-2xl font-bold bg-[#020978] text-white flex items-center justify-center">
                                     {category.name}
                                 </div>
                                 {category.questions.map((question) => {
@@ -114,7 +114,7 @@ export default function GameRoom(gameRoom: GameRoomType) {
                                                 showQuestion(question.question)
                                             }}
                                             key={question.question}
-                                            className="cursor-pointer text-6xl font-semibold bg-[#020978] text-[#D7A14A] flex items-center justify-center">
+                                            className="cursor-pointer text-xs lg:text-5xl font-semibold bg-[#020978] text-[#D7A14A] flex items-center justify-center">
                                             { true && question.order * category.multiplier * 100 }
                                         </div>
                                     );
@@ -138,7 +138,7 @@ export default function GameRoom(gameRoom: GameRoomType) {
                     footer={null}
                     styles={{'content': {padding: '0', margin: '0', height: '100%', borderRadius: 0}}}
                 >
-                    <div className="text-7xl">
+                    <div className="px-4 text-center text-base lg:text-7xl">
                         <p>{question}</p>
                     </div>
                 </Modal>

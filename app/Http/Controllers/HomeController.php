@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\GameRoom;
+use Firebase\JWT\Key;
 use Illuminate\Foundation\Application;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -23,11 +24,15 @@ class HomeController extends Controller {
             ];
         }
 
+        $user_game_room = null;
+        if (!empty($request->cookie('game_room_jwt'))) {
+            $user_game_room = JWT::decode($request->cookie('game_room_jwt'), new Key(env('JWT_SECRET_KEY'), 'HS256'));
+        }
+
         return Inertia::render('Welcome', [
             'canLogin' => Route::has('login'),
             'canRegister' => Route::has('register'),
-            'laravelVersion' => Application::VERSION,
-            'phpVersion' => PHP_VERSION,
+            'userGameRoom' => $user_game_room,
             'game' => $game
         ]);
     }
@@ -38,25 +43,26 @@ class HomeController extends Controller {
             'gameCode' => 'required|exists:App\Models\GameRoom,code',
         ]);
 
-        $gameRoom = GameRoom::with('teams')
+        $game_room = GameRoom::with('teams')
                         ->where('code', $request->gameCode)
                         ->first();
 
-        $teams = $gameRoom->teams->map(function ($team) {
+        $teams = $game_room->teams->map(function ($team) {
             return ['value' => $team->id, 'label' => $team->team_name];
         });
 
         // Create JWT
         $payload = [
-            'game_room_id' => $gameRoom->id,
+            'joined_room' => false,
+            'game_room_id' => $game_room->id,
         ];
 
         return redirect()->route('home')->with(
             [
                 'game' =>
                 [
-                    'id' => $gameRoom->id,
-                    'hasTeams' => $gameRoom->has_teams,
+                    'id' => $game_room->id,
+                    'hasTeams' => $game_room->has_teams,
                     'teams' => $teams,
                 ]
             ]

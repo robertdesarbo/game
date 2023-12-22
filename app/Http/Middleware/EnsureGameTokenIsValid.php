@@ -22,15 +22,15 @@ class EnsureGameTokenIsValid
         }
 
         try {
-            $gameRoom = JWT::decode($request->cookie('game_room_jwt'), new Key(env('JWT_SECRET_KEY'), 'HS256'));
+            $user_game_room = JWT::decode($request->cookie('game_room_jwt'), new Key(env('JWT_SECRET_KEY'), 'HS256'));
 
-            if ((int)$gameRoom->game_room_id !== (int)$request->route('id')) {
+            if ((int)$user_game_room->game_room_id !== (int)$request->route('id')) {
                 return redirect('/');
             }
 
             $request->merge([
-                'user' => $gameRoom->name ?? '',
-                'team_name' => $gameRoom->team_name ?? ''
+                'user' => $user_game_room->name ?? '',
+                'team_name' => $user_game_room->team_name ?? ''
             ]);
 
             return $next($request);

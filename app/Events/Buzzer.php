@@ -16,7 +16,7 @@ class Buzzer implements ShouldBroadcastNow
      * Create a new event instance.
      */
     public function __construct(
-        private GameRoom $gameRoom, private Array $users
+        private GameRoom $game_room, private Array $users
     ) {
         //
     }
@@ -33,7 +33,7 @@ class Buzzer implements ShouldBroadcastNow
 
     public function broadcastAs(): string
     {
-        return 'game.room.'.$this->gameRoom->id.'.buzzer';
+        return 'game.room.'.$this->game_room->id.'.buzzer';
     }
 
     public function broadcastWith()

@@ -20,17 +20,31 @@ class GameRoomController extends Controller {
             ->where('id', $id)
             ->first();
 
+        // Get scores of currently buzzed in users
+        $team_scores = collect(json_decode(Redis::get('buzzer:game:room:'.$id.':score') ?? ''));
+
         return Inertia::render('Game/GameRoom', [
             'game' => $game_room->game,
             'metaData' => $game_room->universe->meta_data,
-            'teams' => $game_room->teams
+            'teams' => $game_room->teams,
+            'scores' => $team_scores
         ]);
+    }
+
+    public function leave(Request $request): RedirectResponse
+    {
+        $request->session()->invalidate();
+
+        $request->session()->regenerateToken();
+
+        return redirect('/')->withCookie(\Cookie::forget('game_room_jwt'));
     }
 
     public function joinRoom(Request $request, int $id): RedirectResponse
     {
         // Update JWT
         $payload = [
+            'joined_room' => true,
             'game_room_id' => $id,
             'team_name' => $request->get('team'),
             'name'  => $request->get('name'),
@@ -58,27 +72,27 @@ class GameRoomController extends Controller {
         $buzzer_key = 'buzzer:game:room:'.$id;
 
         // Get list of currently buzzed in users
-        $buzzerUsers = collect(json_decode(Redis::get($buzzer_key) ?? ''));
+        $buzzer_users = collect(json_decode(Redis::get($buzzer_key) ?? ''));
 
         // Prevent duplicate buzzers
-        $hasTeamBuzzedIn = $buzzerUsers->contains(function (object $user, int $key) use($request) {
+        $has_team_buzzed_in = $buzzer_users->contains(function (object $user, int $key) use($request) {
             return $user->teamName === $request->get('team_name');
         });
 
-        if (!$hasTeamBuzzedIn) {
+        if (!$has_team_buzzed_in) {
             // Make sure we only store 1 team buzzed in
-            $uniqueUsers = $buzzerUsers->unique('teamName');
+            $unique_users = $buzzer_users->unique('teamName');
 
             // Save list of buzzed in users
             // Remove duplicates of same team if they exist
-            Redis::set($buzzer_key, $uniqueUsers->add([
+            Redis::set($buzzer_key, $unique_users->add([
                 'name' => $request->get('user'),
                 'teamName' => $request->get('team_name')
             ])->toJson());
 
             $game_room = GameRoom::where('id', $id) ->first();
 
-            Buzzer::dispatch($game_room, $uniqueUsers->toArray());
+            Buzzer::dispatch($game_room, $unique_users->toArray());
         }
     }
 
@@ -86,7 +100,7 @@ class GameRoomController extends Controller {
     {
         $game_score_key = 'buzzer:game:room:'.$id.':score';
 
-        $team_id = $request->team_id;
+        $team_id = (int) $request->team_id;
         $is_correct = $request->is_correct;
         $amount = $request->amount;
 
@@ -94,7 +108,7 @@ class GameRoomController extends Controller {
         $team_scores = collect(json_decode(Redis::get($game_score_key) ?? ''));
 
         $team_scores = $team_scores->where('team_id', $team_id)
-                            ->pipeThrough(function (Collection $team_score) use ($is_correct,$amount, $team_id) {
+                            ->pipeThrough(function (Collection $team_score) use ($is_correct, $amount, $team_id) {
                                 $team_score->whenEmpty(function (Collection $collection) use ($team_id) {
                                     return $collection
                                         ->push((object)[
