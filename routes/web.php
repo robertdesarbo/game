@@ -33,6 +33,8 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/game/{id}', [GameRoomController::class, '__invoke'])
         ->name('game');
+    Route::post('/game/{id}/buzzable', [GameRoomController::class, 'buzzable'])
+        ->name('buzzable');
     Route::post('/game/{id}/answer', [GameRoomController::class, 'answer'])
         ->name('answer');
     Route::post('/game/{id}/answerWithoutScore', [GameRoomController::class, 'answerWithoutScore'])

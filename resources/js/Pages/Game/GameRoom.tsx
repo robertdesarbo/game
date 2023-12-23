@@ -31,12 +31,20 @@ export default function GameRoom(gameRoom: GameRoomType) {
         setQuestionsAnswered(gameRoom.questionsAnswered);
     }, []);
 
+    useEffect(() => {
+        setActiveTeamId(null);
+    }, [questionsAnswered]);
 
     const handleKeyDown = (event) => {
         if(event.shiftKey && event.key === 'S') {
             // show teamScore
             setIsDrawerOpen(!isDrawerOpen)
         } else if (event.shiftKey && event.key === 'C') {
+            if(typeof question?.question === 'undefined' || activeTeamId === null) {
+                console.log('ignore');
+                return;
+            }
+
             // correct answer
             axios.post(route(`answer`, {
                 id: gameRoom.id,
@@ -44,7 +52,7 @@ export default function GameRoom(gameRoom: GameRoomType) {
                 team_id: activeTeamId,
                 is_correct: true,
                 was_not_answered: false,
-                amount: 100,
+                amount: question.order * category.multiplier * 100,
             })).then(res => {
                 const response = res.data;
 
@@ -58,6 +66,11 @@ export default function GameRoom(gameRoom: GameRoomType) {
             });
 
         } else if (event.shiftKey && event.key === 'W') {
+            if(typeof question?.question === 'undefined' || activeTeamId === null) {
+                console.log('ignore');
+                return;
+            }
+
             // incorrect answer
             axios.post(route(`answer`, {
                 id: gameRoom.id,
@@ -65,7 +78,7 @@ export default function GameRoom(gameRoom: GameRoomType) {
                 team_id: activeTeamId,
                 is_correct: false,
                 was_not_answered: false,
-                amount: 100,
+                amount: question.order * 100,
             })).then(res => {
                 const response = res.data;
 
@@ -92,17 +105,25 @@ export default function GameRoom(gameRoom: GameRoomType) {
     }
 
     const showQuestion = (question: Question) => {
+        // Show Answer
         setShowAnswer(false);
-
         setQuestion(question);
         setIsModalOpen(true);
-    };
 
-    const handleOk = () => {
-        setIsModalOpen(false);
+        // Open up buzzing
+        axios.post(route(`buzzable`, {
+            id: gameRoom.id,
+            is_buzzable: true,
+        }));
     };
 
     const handleCancel = () => {
+        // Close buzzing
+        axios.post(route(`buzzable`, {
+            id: gameRoom.id,
+            is_buzzable: false,
+        }));
+
         setIsModalOpen(false);
     };
 
@@ -157,7 +178,6 @@ export default function GameRoom(gameRoom: GameRoomType) {
                     }}
                     width="100%"
                     open={isModalOpen}
-                    onOk={handleOk}
                     maskClosable={false}
                     centered={true}
                     onCancel={handleCancel}

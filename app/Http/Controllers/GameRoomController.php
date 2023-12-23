@@ -5,15 +5,15 @@ namespace App\Http\Controllers;
 use App\Models\GameRoom;
 use App\Models\GameRoomTeam;
 use App\Events\Buzzer;
+use App\Events\QuestionBuzzable;
 use Firebase\JWT\JWT;
-use Firebase\JWT\Key;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Redis;
 use Inertia\Inertia;
 use Inertia\Response;
-use Illuminate\Support\Facades\Redis;
 
 class GameRoomController extends Controller {
     public function __invoke(Request $request, int $id): Response
@@ -26,7 +26,7 @@ class GameRoomController extends Controller {
         $team_scores = collect(json_decode(Redis::get('buzzer:game:room:'.$id.':score') ?? ''));
 
         $questions_answered_key = 'game:room:'.$id.':questions:answered';
-        
+
         return Inertia::render('Game/GameRoom', [
             'id' => $id,
             'game' => $game_room->game,
@@ -77,6 +77,16 @@ class GameRoomController extends Controller {
         ]);
     }
 
+    public function buzzable(Request $request, int $id): void
+    {
+        // Clear buzzer queue
+        Redis::del('buzzer:game:room:'.$id);
+
+        $game_room = GameRoom::where('id', $id) ->first();
+
+        QuestionBuzzable::dispatch($game_room, (bool) $request->get('is_buzzable'));
+    }
+
     public function incomingBuzzer(Request $request, int $id): void
     {
         $buzzer_key = 'buzzer:game:room:'.$id;
@@ -109,10 +119,8 @@ class GameRoomController extends Controller {
 
     public function answerWithoutScore(Request $request, int $id): JsonResponse
     {
-        $game_score_key = 'buzzer:game:room:'.$id.':score';
-
-        // Clear buzzer queue
-        Redis::del('buzzer:game:room:'.$id);
+        $game_room = GameRoom::where('id', $id) ->first();
+        QuestionBuzzable::dispatch($game_room, false);
 
         // Mark question as answered
         $questions_answered_key = 'game:room:'.$id.':questions:answered';
@@ -137,6 +145,12 @@ class GameRoomController extends Controller {
         $was_not_answered = $request->was_not_answered;
         $team_id = (int) $request->team_id;
         $amount = $request->amount;
+
+        if ($is_correct) {
+            // Turn off Buzzers
+            $game_room = GameRoom::where('id', $id) ->first();
+            QuestionBuzzable::dispatch($game_room, false);
+        }
 
         // Get scores of currently buzzed in users
         $team_scores = collect(json_decode(Redis::get($game_score_key) ?? ''));;
@@ -163,9 +177,6 @@ class GameRoomController extends Controller {
         }
 
         if ($is_correct || $was_not_answered) {
-            // Clear buzzer queue
-            Redis::del('buzzer:game:room:'.$id);
-
             // Mark question as answered
             $questions_answered_key = 'game:room:'.$id.':questions:answered';
 
