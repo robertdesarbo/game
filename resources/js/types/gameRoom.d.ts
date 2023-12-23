@@ -48,6 +48,5 @@ export interface UserGameRoom {
 
 export interface Buzzer {
     gameRoom: GameRoom;
-    team: Team;
     user: string;
 }

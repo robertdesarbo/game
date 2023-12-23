@@ -74,6 +74,7 @@ class GameRoomController extends Controller {
 
         return Inertia::render('Game/Buzzer', [
             'gameRoom' => $game_room,
+            'user' => json_decode($request->get('user')),
         ]);
     }
 
@@ -176,11 +177,10 @@ class GameRoomController extends Controller {
             Redis::set($game_score_key, $team_scores->toJson());
         }
 
+        $questions_answered_key = 'game:room:'.$id.':questions:answered';
+        $questions_answered = collect(json_decode(Redis::get($questions_answered_key) ?? []));
         if ($is_correct || $was_not_answered) {
             // Mark question as answered
-            $questions_answered_key = 'game:room:'.$id.':questions:answered';
-
-            $questions_answered = collect(json_decode(Redis::get($questions_answered_key) ?? []));
             $questions_answered->push($question);
 
             Redis::set($questions_answered_key, $questions_answered->toJson());

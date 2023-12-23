@@ -8,13 +8,16 @@ import axios from 'axios';
 
 export default function GameRoom(gameRoom: GameRoomType) {
     const [questionsAnswered, setQuestionsAnswered] = useState<string[]>([]);
+
     const [question, setQuestion] = useState<Question>();
     const [showAnswer, setShowAnswer] = useState(false);
+    const [activeTeamId, setActiveTeamId] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
+
+    const [usersBuzzedIn, setUsersBuzzedIn] = useState([]);
+
     const [isDrawerOpen, setIsDrawerOpen] = useState(false);
     const [teamScore, setTeamScore] = useState({});
-
-    const [activeTeamId, setActiveTeamId] = useState(null);
 
     const [api, contextHolder] = notification.useNotification();
 
@@ -52,7 +55,7 @@ export default function GameRoom(gameRoom: GameRoomType) {
                 team_id: activeTeamId,
                 is_correct: true,
                 was_not_answered: false,
-                amount: question.order * category.multiplier * 100,
+                amount: question.order * 100,
             })).then(res => {
                 const response = res.data;
 
@@ -63,6 +66,9 @@ export default function GameRoom(gameRoom: GameRoomType) {
 
                 setShowAnswer(true);
                 setQuestionsAnswered(response.questionsAnswered);
+
+                // Close all notifications
+                api.destroy();
             });
 
         } else if (event.shiftKey && event.key === 'W') {
@@ -87,7 +93,22 @@ export default function GameRoom(gameRoom: GameRoomType) {
                     [activeTeamId]: response.score
                 }));
 
-                setQuestionsAnswered(response.questionsAnswered);
+                // Close this teams notification
+                api.destroy(activeTeamId);
+
+                // Set next team as active
+                setUsersBuzzedIn((usersBuzzedIn) => {
+                    usersBuzzedIn.shift();
+
+                    if (usersBuzzedIn.length > 0) {
+                        const user = usersBuzzedIn[usersBuzzedIn.length - 1].user;
+                        setActiveTeamId(user.team.id);
+                    } else {
+                        setActiveTeamId(null);
+                    }
+
+                    return usersBuzzedIn;
+                });
             });
         } else if (event.shiftKey && event.key === 'U') {
             // incorrect answer
@@ -124,15 +145,29 @@ export default function GameRoom(gameRoom: GameRoomType) {
             is_buzzable: false,
         }));
 
+        api.destroy();
+
+        setQuestion(null);
+        setShowAnswer(false);
+        setActiveTeamId(null);
         setIsModalOpen(false);
     };
 
     const listenerCallback = (data: any) => {
+        setUsersBuzzedIn(data.users);
+
         const user = data.users[data.users.length - 1].user;
 
-        setActiveTeamId(user.team.id);
+        setActiveTeamId((previousTeamId) => {
+            if (previousTeamId === null) {
+                return user.team.id;
+            }
+
+            return previousTeamId;
+        });
 
         api.info({
+            key: user.team.id,
             placement: "topLeft",
             message: `${user.name} buzzed in (${user?.team.team_name})`,
             duration: 0,
@@ -195,7 +230,8 @@ export default function GameRoom(gameRoom: GameRoomType) {
                 </Modal>
                 <Drawer
                     title="Scores"
-                    placement="bottom" open={isDrawerOpen}
+                    placement="bottom"
+                    open={isDrawerOpen}
                     height={175}
                     closeIcon={false}
                 >
