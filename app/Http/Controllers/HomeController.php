@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\GameRoom;
 use Firebase\JWT\Key;
-use Illuminate\Foundation\Application;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;

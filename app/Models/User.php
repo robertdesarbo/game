@@ -46,6 +46,6 @@ class User extends Authenticatable
 
     public function rooms(): HasMany
     {
-        return $this->hasMany(GameRoom::class);
+        return $this->hasMany(GameRoom::class, 'host_id');
     }
 }

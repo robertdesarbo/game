@@ -10,7 +10,7 @@ import {Game} from "@/types/game";
 export default function JoinRoom({ game } : { game: Game } ) {
     const { data, setData, post, processing, errors, reset } = useForm({
         gameId: game.id,
-        team: '',
+        team_id: '',
         name: '',
         remember: false,
     });
@@ -51,7 +51,7 @@ export default function JoinRoom({ game } : { game: Game } ) {
                             placeholder="Team"
                             className="h-11 w-full"
                             options={game?.teams}
-                            onChange={(value, option) => setData('team', option?.label)}
+                            onChange={(value, option) => setData('team_id', option?.value)}
                         />
 
                         <InputError message={errors.name} className="mt-2"/>

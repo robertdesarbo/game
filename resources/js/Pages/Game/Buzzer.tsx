@@ -6,8 +6,6 @@ import BuzzerListen from "@/Pages/Game/BuzzerListen";
 export default function Buzzer(buzzer: BuzzerType) {
     const { post } = useForm({
         id: buzzer.gameRoom.id,
-        user: buzzer.user,
-        team_name: buzzer.teamName,
     });
 
     const options = {
@@ -34,7 +32,6 @@ export default function Buzzer(buzzer: BuzzerType) {
     };
 
     const listenerCallback = (data: any) => {
-        console.log('here');
         console.log(data);
     };
 

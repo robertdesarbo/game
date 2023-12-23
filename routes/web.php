@@ -3,8 +3,8 @@
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\GameRoomController;
+use App\Http\Controllers\DashboardController;
 use Illuminate\Support\Facades\Route;
-use Inertia\Inertia;
 
 /*
 |--------------------------------------------------------------------------
@@ -22,9 +22,9 @@ Route::get('/', [HomeController::class, 'index'])
 Route::post('join-game', [HomeController::class, 'joinGame'])
     ->name('join-game');
 
-Route::get('/dashboard', function () {
-    return Inertia::render('Dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+Route::get('/dashboard', [DashboardController::class, '__invoke'])
+    ->middleware(['auth', 'verified'])
+    ->name('dashboard');
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
@@ -35,6 +35,8 @@ Route::middleware('auth')->group(function () {
         ->name('game');
     Route::post('/game/{id}/answer', [GameRoomController::class, 'answer'])
         ->name('answer');
+    Route::post('/game/{id}/answerWithoutScore', [GameRoomController::class, 'answerWithoutScore'])
+        ->name('answerWithoutScore');
 });
 
 Route::middleware('game.room.valid')->group(function () {

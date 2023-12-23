@@ -29,8 +29,7 @@ class EnsureGameTokenIsValid
             }
 
             $request->merge([
-                'user' => $user_game_room->name ?? '',
-                'team_name' => $user_game_room->team_name ?? ''
+                'user' => collect($user_game_room)->toJson(),
             ]);
 
             return $next($request);

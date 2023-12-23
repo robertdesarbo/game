@@ -31,6 +31,12 @@ export interface GameRoom {
     metaData: Categories;
     teams: Team[];
     scores: Score[];
+    questionsAnswered: string [];
+}
+
+export interface Question {
+    question: string;
+    answer: string;
 }
 
 export interface UserGameRoom {
@@ -42,6 +48,6 @@ export interface UserGameRoom {
 
 export interface Buzzer {
     gameRoom: GameRoom;
-    teamName: string;
+    team: Team;
     user: string;
 }

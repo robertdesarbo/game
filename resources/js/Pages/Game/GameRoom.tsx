@@ -1,5 +1,5 @@
 import { Head } from "@inertiajs/react";
-import { GameRoom as GameRoomType } from "@/types/gameRoom";
+import {GameRoom as GameRoomType, Question} from "@/types/gameRoom";
 import { useEffect, useState } from "react";
 import { Modal, notification, Drawer, Statistic } from 'antd';
 import BuzzerListen from "@/Pages/Game/BuzzerListen";
@@ -7,70 +7,93 @@ import { FocusScope } from 'react-aria';
 import axios from 'axios';
 
 export default function GameRoom(gameRoom: GameRoomType) {
-    const [question, setQuestion] = useState('');
+    const [questionsAnswered, setQuestionsAnswered] = useState<string[]>([]);
+    const [question, setQuestion] = useState<Question>();
+    const [showAnswer, setShowAnswer] = useState(false);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isDrawerOpen, setIsDrawerOpen] = useState(false);
     const [teamScore, setTeamScore] = useState({});
 
-    const [activeTeamId, setActiveTeamId] = useState(1);
-    const [activeQuestionId, setActiveQuestionId] = useState(2);
+    const [activeTeamId, setActiveTeamId] = useState(null);
 
     const [api, contextHolder] = notification.useNotification();
 
     useEffect(() => {
+        // Restore the score
         gameRoom.teams.map((team) => {
             setTeamScore((previousScore) => ({
                 ...previousScore,
                 [team.id]: gameRoom.scores.find((score) => score.team_id === team.id)?.score ?? 0
-        }));
+            }));
         });
+
+        // Restore questions answered
+        setQuestionsAnswered(gameRoom.questionsAnswered);
     }, []);
 
 
     const handleKeyDown = (event) => {
         if(event.shiftKey && event.key === 'S') {
             // show teamScore
-            console.log('teamScore');
             setIsDrawerOpen(!isDrawerOpen)
         } else if (event.shiftKey && event.key === 'C') {
             // correct answer
             axios.post(route(`answer`, {
-                id: 1,
-                question_id: activeQuestionId,
+                id: gameRoom.id,
+                question: question?.question,
                 team_id: activeTeamId,
                 is_correct: true,
+                was_not_answered: false,
                 amount: 100,
             })).then(res => {
-                const score = res.data.score;
+                const response = res.data;
 
                 setTeamScore((previousScore) => ({
                     ...previousScore,
-                    [activeTeamId]: score
-                }))
+                    [activeTeamId]: response.score
+                }));
+
+                setShowAnswer(true);
+                setQuestionsAnswered(response.questionsAnswered);
             });
 
-            console.log('correct');
         } else if (event.shiftKey && event.key === 'W') {
             // incorrect answer
             axios.post(route(`answer`, {
-                id: 1,
-                question_id: activeQuestionId,
+                id: gameRoom.id,
+                question: question?.question,
                 team_id: activeTeamId,
                 is_correct: false,
+                was_not_answered: false,
                 amount: 100,
             })).then(res => {
-                const score = res.data.score;
+                const response = res.data;
 
                 setTeamScore((previousScore) => ({
                     ...previousScore,
-                    [activeTeamId]: score
-                }))
+                    [activeTeamId]: response.score
+                }));
+
+                setQuestionsAnswered(response.questionsAnswered);
+            });
+        } else if (event.shiftKey && event.key === 'U') {
+            // incorrect answer
+            axios.post(route(`answerWithoutScore`, {
+                id: gameRoom.id,
+                question: question?.question,
+            })).then(res => {
+                const response = res.data;
+
+                // Show Answer
+                setShowAnswer(true);
+                setQuestionsAnswered(response.questionsAnswered);
             });
         }
     }
 
+    const showQuestion = (question: Question) => {
+        setShowAnswer(false);
 
-    const showQuestion = (question: string) => {
         setQuestion(question);
         setIsModalOpen(true);
     };
@@ -84,11 +107,13 @@ export default function GameRoom(gameRoom: GameRoomType) {
     };
 
     const listenerCallback = (data: any) => {
-        const user = data.users[data.users.length - 1];
+        const user = data.users[data.users.length - 1].user;
+
+        setActiveTeamId(user.team.id);
 
         api.info({
             placement: "topLeft",
-            message: `${user?.name} buzzed in (${user?.teamName})`,
+            message: `${user.name} buzzed in (${user?.team.team_name})`,
             duration: 0,
         });
     };
@@ -111,11 +136,13 @@ export default function GameRoom(gameRoom: GameRoomType) {
                                     return (
                                         <div
                                             onClick={() => {
-                                                showQuestion(question.question)
+                                                if(!questionsAnswered?.includes(question.question)) {
+                                                    showQuestion(question)
+                                                }
                                             }}
                                             key={question.question}
                                             className="cursor-pointer text-xs lg:text-5xl font-semibold bg-[#020978] text-[#D7A14A] flex items-center justify-center">
-                                            { true && question.order * category.multiplier * 100 }
+                                            { !questionsAnswered?.includes(question.question) && question.order * category.multiplier * 100 }
                                         </div>
                                     );
                                 })}
@@ -139,7 +166,11 @@ export default function GameRoom(gameRoom: GameRoomType) {
                     styles={{'content': {padding: '0', margin: '0', height: '100%', borderRadius: 0}}}
                 >
                     <div className="px-4 text-center text-base lg:text-7xl">
-                        <p>{question}</p>
+                        {showAnswer ? (
+                            <p>{question?.answer}</p>
+                        ) : (
+                            <p>{question?.question}</p>
+                        )}
                     </div>
                 </Modal>
                 <Drawer
