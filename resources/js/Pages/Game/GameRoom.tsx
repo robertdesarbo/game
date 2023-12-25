@@ -152,6 +152,25 @@ export default function GameRoom(gameRoom: GameRoomType) {
         setIsModalOpen(false);
     };
 
+    const getOrdinal = (n: number) => {
+        let ord = 'th';
+
+        if (n % 10 == 1 && n % 100 != 11)
+        {
+            ord = 'st';
+        }
+        else if (n % 10 == 2 && n % 100 != 12)
+        {
+            ord = 'nd';
+        }
+        else if (n % 10 == 3 && n % 100 != 13)
+        {
+            ord = 'rd';
+        }
+
+        return n + ord;
+    }
+
     const listenerCallback = (data: any) => {
         setUsersBuzzedIn(data.users);
 
@@ -168,7 +187,7 @@ export default function GameRoom(gameRoom: GameRoomType) {
         api.info({
             key: user.team.id,
             placement: "topLeft",
-            message: `${user.name} buzzed in (${user?.team.team_name})`,
+            message: `${getOrdinal(data.users.length)} - ${user.name} buzzed in (${user?.team.team_name})`,
             duration: 0,
         });
     };
