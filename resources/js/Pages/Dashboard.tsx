@@ -3,10 +3,11 @@ import {Head, Link} from '@inertiajs/react';
 import { PageProps } from '@/types';
 import { Typography } from 'antd';
 import PrimaryButton from "@/Components/PrimaryButton";
+import {GameRoom} from "@/types/gameRoom";
 
 const { Title } = Typography;
 
-export default function Dashboard({ auth, gameRooms }: PageProps) {
+export default function Dashboard({ auth, gameRooms }: PageProps<{ gameRooms: GameRoom[] }>) {
     return (
         <AuthenticatedLayout
             user={auth.user}

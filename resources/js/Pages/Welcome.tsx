@@ -2,12 +2,12 @@ import {Link, Head} from '@inertiajs/react';
 import { PageProps } from '@/types';
 import GuestLayout from '@/Layouts/GuestLayout';
 import GameLogin from "@/Pages/Game/GameLogin";
-import {Game} from "@/types/game";
+import {JoinGame as JoinGameType} from "@/types/game";
 import {UserGameRoom} from "@/types/gameRoom";
 import PrimaryButton from "@/Components/PrimaryButton";
 import GuestInGameLayout from "@/Layouts/GuestInGameLayout";
 
-export default function Welcome({ auth, laravelVersion, phpVersion, userGameRoom, game }: PageProps<{ laravelVersion: string, phpVersion: string, userGameRoom: UserGameRoom, game: Game }>) {
+export default function Welcome({ auth, laravelVersion, phpVersion, userGameRoom, game }: PageProps<{ laravelVersion: string, phpVersion: string, userGameRoom: UserGameRoom, game: JoinGameType }>) {
     return (
         <>
             <Head title="Welcome" />

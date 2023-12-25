@@ -28,7 +28,7 @@ export default function Buzzer(buzzer: BuzzerType) {
 
         setBuzzerStatus(BuzzerStatus.Clicked);
 
-        axios.post((`/game/${buzzer.gameRoom.id}/buzzer`), {
+        window.axios.post((`/game/${buzzer.gameRoom.id}/buzzer`), {
             preserveScroll: true
         }).then(() => {
             messageApi.open({
@@ -39,7 +39,7 @@ export default function Buzzer(buzzer: BuzzerType) {
     };
 
     const BuzzerListenerCallback = (data: any) => {
-        console.log(data);
+        //
     };
 
     const BuzzableListenerCallback = (data: any) => {

@@ -28,6 +28,7 @@ interface Score {
 export interface GameRoom {
     id: string;
     game: string;
+    code: string;
     metaData: Categories;
     teams: Team[];
     scores: Score[];
@@ -46,7 +47,20 @@ export interface UserGameRoom {
     name: string;
 }
 
+export interface RedisUser {
+    [key: string]: User
+}
+
+export interface RedisScore {
+    [key: string]: number
+}
+
+export interface User {
+    name: string;
+    team: Team;
+}
+
 export interface Buzzer {
     gameRoom: GameRoom;
-    user: string;
+    user: User;
 }

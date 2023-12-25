@@ -1,25 +1,24 @@
 import { Head } from "@inertiajs/react";
-import {GameRoom as GameRoomType, Question} from "@/types/gameRoom";
+import {GameRoom as GameRoomType, Question, RedisScore, RedisUser} from "@/types/gameRoom";
 import { useEffect, useState } from "react";
 import { Modal, notification, Drawer, Statistic } from 'antd';
 import BuzzerListen from "@/Pages/Game/BuzzerListen";
 import { FocusScope } from 'react-aria';
-import axios from 'axios';
 
 export default function GameRoom(gameRoom: GameRoomType) {
     const [questionsAnswered, setQuestionsAnswered] = useState<string[]>([]);
 
     const [question, setQuestion] = useState<Question>();
     const [showAnswer, setShowAnswer] = useState(false);
-    const [activeTeamId, setActiveTeamId] = useState(null);
+    const [activeTeamId, setActiveTeamId] = useState<number|null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
 
-    const [usersBuzzedIn, setUsersBuzzedIn] = useState([]);
+    const [usersBuzzedIn, setUsersBuzzedIn] = useState<RedisUser[]>([]);
 
     const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-    const [teamScore, setTeamScore] = useState({});
+    const [teamScore, setTeamScore] = useState<RedisScore|null>(null);
 
-    const [api, contextHolder] = notification.useNotification();
+    const [api, contextHolder] = notification.useNotification({stack: false});
 
     useEffect(() => {
         // Restore the score
@@ -38,7 +37,7 @@ export default function GameRoom(gameRoom: GameRoomType) {
         setActiveTeamId(null);
     }, [questionsAnswered]);
 
-    const handleKeyDown = (event) => {
+    const handleKeyDown = (event: React.KeyboardEvent<HTMLImageElement>) => {
         if(event.shiftKey && event.key === 'S') {
             // show teamScore
             setIsDrawerOpen(!isDrawerOpen)
@@ -49,12 +48,11 @@ export default function GameRoom(gameRoom: GameRoomType) {
             }
 
             // correct answer
-            axios.post(route(`answer`, {
+            window.axios.post(route(`answer`, {
                 id: gameRoom.id,
                 question: question?.question,
                 team_id: activeTeamId,
                 is_correct: true,
-                was_not_answered: false,
                 amount: question.order * 100,
             })).then(res => {
                 const response = res.data;
@@ -78,12 +76,11 @@ export default function GameRoom(gameRoom: GameRoomType) {
             }
 
             // incorrect answer
-            axios.post(route(`answer`, {
+            window.axios.post(route(`answer`, {
                 id: gameRoom.id,
                 question: question?.question,
                 team_id: activeTeamId,
                 is_correct: false,
-                was_not_answered: false,
                 amount: question.order * 100,
             })).then(res => {
                 const response = res.data;
@@ -97,22 +94,24 @@ export default function GameRoom(gameRoom: GameRoomType) {
                 api.destroy(activeTeamId);
 
                 // Set next team as active
-                setUsersBuzzedIn((usersBuzzedIn) => {
-                    usersBuzzedIn.shift();
+                setUsersBuzzedIn((previousUsersBuzzedIn) => {
+                    const remove = previousUsersBuzzedIn.shift();
 
-                    if (usersBuzzedIn.length > 0) {
-                        const user = usersBuzzedIn[usersBuzzedIn.length - 1].user;
+                    console.log(remove);
+                    if (previousUsersBuzzedIn.length > 0) {
+                        const user = previousUsersBuzzedIn[0].user;
+                        console.log(user.team.id);
                         setActiveTeamId(user.team.id);
                     } else {
                         setActiveTeamId(null);
                     }
 
-                    return usersBuzzedIn;
+                    return previousUsersBuzzedIn;
                 });
             });
         } else if (event.shiftKey && event.key === 'U') {
             // incorrect answer
-            axios.post(route(`answerWithoutScore`, {
+            window.axios.post(route(`answerWithoutScore`, {
                 id: gameRoom.id,
                 question: question?.question,
             })).then(res => {
@@ -132,7 +131,7 @@ export default function GameRoom(gameRoom: GameRoomType) {
         setIsModalOpen(true);
 
         // Open up buzzing
-        axios.post(route(`buzzable`, {
+        window.axios.post(route(`buzzable`, {
             id: gameRoom.id,
             is_buzzable: true,
         }));
@@ -140,16 +139,16 @@ export default function GameRoom(gameRoom: GameRoomType) {
 
     const handleCancel = () => {
         // Close buzzing
-        axios.post(route(`buzzable`, {
+        window.axios.post(route(`buzzable`, {
             id: gameRoom.id,
             is_buzzable: false,
         }));
 
         api.destroy();
 
-        setQuestion(null);
-        setShowAnswer(false);
+        setQuestion(undefined);
         setActiveTeamId(null);
+        setShowAnswer(false);
         setIsModalOpen(false);
     };
 
@@ -229,16 +228,21 @@ export default function GameRoom(gameRoom: GameRoomType) {
                     </div>
                 </Modal>
                 <Drawer
-                    title="Scores"
                     placement="bottom"
                     open={isDrawerOpen}
-                    height={175}
+                    height={100}
                     closeIcon={false}
+                    mask={false}
                 >
                     <div className="w-full grid grid-flow-col auto-cols-12 text-center">
                         {gameRoom.teams.map((team) => {
                             return (
-                                <Statistic key={team?.id} title={team?.team_name} prefix="$" value={teamScore[team?.id]} />
+                                <Statistic
+                                    key={team?.team_name}
+                                    title={team?.team_name}
+                                    prefix="$"
+                                    value={teamScore !== null ? teamScore[team?.id] : 0}
+                                />
                             );
                         })}
                     </div>

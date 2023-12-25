@@ -4,9 +4,9 @@ import TextInput from "@/Components/TextInput";
 import InputError from "@/Components/InputError";
 import {FormEventHandler} from "react";
 import PrimaryButton from "@/Components/PrimaryButton";
-import {Game} from "@/types/game";
+import {JoinGame as JoinGameType} from "@/types/game";
 
-export default function JoinGame({ game } : { game: Game }) {
+export default function JoinGame({ game } : { game: JoinGameType }) {
     const { data, setData, post, processing, errors } = useForm({
         gameCode: '',
         remember: false,

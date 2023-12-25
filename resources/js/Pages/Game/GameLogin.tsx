@@ -1,8 +1,8 @@
 import JoinGame from "@/Pages/Game/JoinGame";
 import JoinRoom from "@/Pages/Game/JoinRoom";
-import {Game} from "@/types/game";
+import {JoinGame as JoinGameType} from "@/types/game";
 
-export default function GameLogin({ game } : { game: Game }) {
+export default function GameLogin({ game } : { game: JoinGameType }) {
     return (
         <>
             <JoinGame game={game} />

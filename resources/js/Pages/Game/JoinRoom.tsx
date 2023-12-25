@@ -5,9 +5,9 @@ import InputError from "@/Components/InputError";
 import { Select } from 'antd';
 import {FormEventHandler} from "react";
 import PrimaryButton from "@/Components/PrimaryButton";
-import {Game} from "@/types/game";
+import {JoinGame} from "@/types/game";
 
-export default function JoinRoom({ game } : { game: Game } ) {
+export default function JoinRoom({ game } : { game: JoinGame } ) {
     const { data, setData, post, processing, errors, reset } = useForm({
         gameId: game.id,
         team_id: '',
@@ -18,7 +18,7 @@ export default function JoinRoom({ game } : { game: Game } ) {
     const JoinRoom: FormEventHandler = (e) => {
         e.preventDefault();
 
-        post(route(`game`, {
+        post(route(`game.post`, {
             id: game.id
         }));
     };
@@ -47,14 +47,13 @@ export default function JoinRoom({ game } : { game: Game } ) {
                     <div>
                         <Select
                             id="team"
-                            name="team"
                             placeholder="Team"
                             className="h-11 w-full"
                             options={game?.teams}
-                            onChange={(value, option) => setData('team_id', option?.value)}
+                            onChange={(value, option) => setData('team_id', value)}
                         />
 
-                        <InputError message={errors.name} className="mt-2"/>
+                        <InputError message={errors.team_id} className="mt-2"/>
                     </div>
                 }
 

@@ -1,5 +1,10 @@
-export interface Game {
+export interface Options {
+    label: string;
+    value: string
+}
+
+export interface JoinGame {
     id: number;
-    teams: string[]
+    teams: Options[]
     hasTeams: boolean
 }

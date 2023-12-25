@@ -43,7 +43,7 @@ Route::middleware('auth')->group(function () {
 
 Route::middleware('game.room.valid')->group(function () {
     Route::post('/game/{id}', [GameRoomController::class, 'joinRoom'])
-        ->name('game');
+        ->name('game.post');
 
     Route::get('/game/{id}/buzzer', [GameRoomController::class, 'buzzer'])
         ->name('buzzer');

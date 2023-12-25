@@ -33,7 +33,7 @@ class GameRoomController extends Controller {
             'metaData' => $game_room->universe->meta_data,
             'teams' => $game_room->teams,
             'scores' => $team_scores,
-            'questionsAnswered' => collect(json_decode(Redis::get($questions_answered_key) ?? []))
+            'questionsAnswered' => collect($questions_answered_key ? json_decode(Redis::get($questions_answered_key)) : [])
         ]);
     }
 
@@ -126,7 +126,7 @@ class GameRoomController extends Controller {
         // Mark question as answered
         $questions_answered_key = 'game:room:'.$id.':questions:answered';
 
-        $questions_answered = collect(json_decode(Redis::get($questions_answered_key) ?? []));
+        $questions_answered = collect($questions_answered_key ? json_decode(Redis::get($questions_answered_key)) : []);
         $questions_answered->push($request->question);
 
         Redis::set($questions_answered_key, $questions_answered->toJson());
@@ -143,7 +143,6 @@ class GameRoomController extends Controller {
 
         $question = $request->question;
         $is_correct = $request->is_correct;
-        $was_not_answered = $request->was_not_answered;
         $team_id = (int) $request->team_id;
         $amount = $request->amount;
 
@@ -154,32 +153,29 @@ class GameRoomController extends Controller {
         }
 
         // Get scores of currently buzzed in users
-        $team_scores = collect(json_decode(Redis::get($game_score_key) ?? ''));;
-        if (!$was_not_answered) {
-            $team_scores = $team_scores->where('team_id', $team_id)
-                ->pipeThrough(function (Collection $team_score) use ($is_correct, $amount, $team_id) {
-                    $team_score->whenEmpty(function (Collection $collection) use ($team_id) {
-                        return $collection
-                            ->push((object)[
-                                'team_id' => $team_id,
-                                'score' => 0,
-                            ]);
-                    });
+        $team_scores = collect(json_decode(Redis::get($game_score_key) ?? ''));
 
-                    $team_score = $team_score->first();
+        if (!$team_scores->contains('team_id', $team_id)) {
+            $team_score = (object)[
+                'team_id' => $team_id,
+                'score' => $is_correct ? $amount : - $amount,
+            ];
 
+            $team_scores->push($team_score);
+        } else {
+            $team_scores->map(function ($team_score) use($team_id, $is_correct, $amount) {
+                if ($team_score->team_id === $team_id) {
                     $team_score->score = $is_correct ?
                         $team_score->score + $amount : $team_score->score - $amount;
-
-                    return collect([$team_score]);
-                });
-
-            Redis::set($game_score_key, $team_scores->toJson());
+                }
+            });
         }
 
+        Redis::set($game_score_key, $team_scores->toJson());
+
         $questions_answered_key = 'game:room:'.$id.':questions:answered';
-        $questions_answered = collect(json_decode(Redis::get($questions_answered_key) ?? []));
-        if ($is_correct || $was_not_answered) {
+        $questions_answered = collect($questions_answered_key ? json_decode(Redis::get($questions_answered_key)) : []);
+        if ($is_correct) {
             // Mark question as answered
             $questions_answered->push($question);
 
