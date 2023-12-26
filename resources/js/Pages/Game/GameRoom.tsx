@@ -154,7 +154,7 @@ export default function GameRoom(gameRoom: GameRoomType) {
     };
 
     const listenerCallback = (data: any) => {
-        const users = data.users;
+        const users = data.users as RedisUser[];
 
         setUsersBuzzedIn(users);
 

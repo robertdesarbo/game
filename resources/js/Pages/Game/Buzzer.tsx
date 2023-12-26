@@ -18,8 +18,8 @@ export default function Buzzer(buzzer: BuzzerType) {
 
     const [messageApi, contextHolder] = message.useMessage();
 
-    const [buzzerEnabledTime, setBuzzerEnabledTime] = useState<Date|null>(null);
-    const [buzzerStatus, setBuzzerStatus] = useState(BuzzerStatus.Disabled);
+    const [buzzerEnabledTime, setBuzzerEnabledTime] = useState<number|null>(null);
+    const [buzzerStatus, setBuzzerStatus] = useState<BuzzerStatus>(BuzzerStatus.Disabled);
 
     const submitBuzz = () => {
         if (buzzerStatus === BuzzerStatus.Disabled || buzzerStatus === BuzzerStatus.Clicked) {
