@@ -95,13 +95,14 @@ export default function GameRoom(gameRoom: GameRoomType) {
 
                 // Set next team as active
                 setUsersBuzzedIn((previousUsersBuzzedIn) => {
-                    const remove = previousUsersBuzzedIn.shift();
+                    previousUsersBuzzedIn.shift();
 
-                    console.log(remove);
                     if (previousUsersBuzzedIn.length > 0) {
-                        const user = previousUsersBuzzedIn[0].user;
-                        console.log(user.team.id);
-                        setActiveTeamId(user.team.id);
+                        const fastest_user = previousUsersBuzzedIn.reduce(function(prev, curr) {
+                            return prev.milliseconds_to_buzz_in < curr.milliseconds_to_buzz_in ? prev : curr;
+                        });
+
+                        setActiveTeamId(fastest_user.user_data.team.id);
                     } else {
                         setActiveTeamId(null);
                     }
@@ -152,44 +153,26 @@ export default function GameRoom(gameRoom: GameRoomType) {
         setIsModalOpen(false);
     };
 
-    const getOrdinal = (n: number) => {
-        let ord = 'th';
-
-        if (n % 10 == 1 && n % 100 != 11)
-        {
-            ord = 'st';
-        }
-        else if (n % 10 == 2 && n % 100 != 12)
-        {
-            ord = 'nd';
-        }
-        else if (n % 10 == 3 && n % 100 != 13)
-        {
-            ord = 'rd';
-        }
-
-        return n + ord;
-    }
-
     const listenerCallback = (data: any) => {
-        setUsersBuzzedIn(data.users);
+        const users = data.users;
 
-        const user = data.users[data.users.length - 1].user;
+        setUsersBuzzedIn(users);
 
-        setActiveTeamId((previousTeamId) => {
-            if (previousTeamId === null) {
-                return user.team.id;
-            }
-
-            return previousTeamId;
+        const fastest_user = users.reduce(function(prev, curr) {
+            return prev.milliseconds_to_buzz_in < curr.milliseconds_to_buzz_in ? prev : curr;
         });
 
-        api.info({
-            key: user.team.id,
-            placement: "topLeft",
-            message: `${getOrdinal(data.users.length)} - ${user.name} buzzed in (${user?.team.team_name})`,
-            duration: 0,
-        });
+        setActiveTeamId(fastest_user.user_data.team.id);
+
+        // Loop in
+        users.map((user) => {
+            api.info({
+                key: user.user_data.team.id,
+                placement: "topLeft",
+                message: `${user.order} - ${user.user_data.name} buzzed in (${user.user_data.team.team_name})`,
+                duration: 0,
+            });
+        })
     };
 
     return (

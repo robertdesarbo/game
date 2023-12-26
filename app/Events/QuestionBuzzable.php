@@ -38,6 +38,11 @@ class QuestionBuzzable implements ShouldBroadcastNow
 
     public function broadcastWith()
     {
+        // Wait 2 seconds before opening up the buzzer
+        if ($this->is_buzzable) {
+            sleep(2);
+        }
+
         return [
             "buzzable" => $this->is_buzzable,
         ];

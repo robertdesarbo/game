@@ -18,6 +18,7 @@ export default function Buzzer(buzzer: BuzzerType) {
 
     const [messageApi, contextHolder] = message.useMessage();
 
+    const [buzzerEnabledTime, setBuzzerEnabledTime] = useState<Date|null>(null);
     const [buzzerStatus, setBuzzerStatus] = useState(BuzzerStatus.Disabled);
 
     const submitBuzz = () => {
@@ -29,7 +30,8 @@ export default function Buzzer(buzzer: BuzzerType) {
         setBuzzerStatus(BuzzerStatus.Clicked);
 
         window.axios.post((`/game/${buzzer.gameRoom.id}/buzzer`), {
-            preserveScroll: true
+            buzzer_enabled_milliseconds: buzzerEnabledTime,
+            buzzer_submitted_milliseconds: Date.now(),
         }).then(() => {
             messageApi.open({
                 type: 'success',
@@ -45,6 +47,7 @@ export default function Buzzer(buzzer: BuzzerType) {
     const BuzzableListenerCallback = (data: any) => {
         if (data.buzzable) {
             setBuzzerStatus(BuzzerStatus.Enabled);
+            setBuzzerEnabledTime(Date.now());
         } else {
             setBuzzerStatus(BuzzerStatus.Disabled);
         }

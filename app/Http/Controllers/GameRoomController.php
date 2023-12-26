@@ -6,14 +6,16 @@ use App\Models\GameRoom;
 use App\Models\GameRoomTeam;
 use App\Events\Buzzer;
 use App\Events\QuestionBuzzable;
+use App\Helpers\BuzzerHelper;
+use App\Helpers\GameRoomHelper;
 use Firebase\JWT\JWT;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Redis;
 use Inertia\Inertia;
 use Inertia\Response;
+
 
 class GameRoomController extends Controller {
     public function __invoke(Request $request, int $id): Response
@@ -23,7 +25,7 @@ class GameRoomController extends Controller {
             ->first();
 
         // Get scores of currently buzzed in users
-        $team_scores = collect(json_decode(Redis::get('buzzer:game:room:'.$id.':score') ?? ''));
+        $team_scores = GameRoomHelper::get($id);
 
         $questions_answered_key = 'game:room:'.$id.':questions:answered';
 
@@ -81,41 +83,18 @@ class GameRoomController extends Controller {
     public function buzzable(Request $request, int $id): void
     {
         // Clear buzzer queue
-        Redis::del('buzzer:game:room:'.$id);
+        BuzzerHelper::delete($id);
 
         $game_room = GameRoom::where('id', $id) ->first();
 
         QuestionBuzzable::dispatch($game_room, (bool) $request->get('is_buzzable'));
     }
 
-    public function incomingBuzzer(Request $request, int $id): void
-    {
-        $buzzer_key = 'buzzer:game:room:'.$id;
-
-        // Get list of currently buzzed in users
-        $buzzer_users = collect(json_decode(Redis::get($buzzer_key) ?? ''));
-
-        $user = json_decode($request->get('user'));
-
-        // Prevent duplicate buzzers
-        $has_team_buzzed_in = $buzzer_users->contains(function (object $buzzed_user, int $key) use($user) {
-            return $buzzed_user->user->team->team_name === $user->team->team_name;
-        });
-
-        if (!$has_team_buzzed_in) {
-            // Make sure we only store 1 team buzzed in
-            $unique_users = $buzzer_users->unique('team_name');
-
-            // Save list of buzzed in users
-            // Remove duplicates of same team if they exist
-            Redis::set($buzzer_key, $unique_users->add([
-                'user' => $user,
-            ])->toJson());
-
-            $game_room = GameRoom::where('id', $id) ->first();
-
-            Buzzer::dispatch($game_room, $unique_users->toArray());
-        }
+    public function incomingBuzzer(Request $request, int $id): void {
+        Buzzer::dispatch($id,
+            json_decode($request->get('user')),
+            $request->get('buzzer_submitted_milliseconds') - $request->get('buzzer_enabled_milliseconds')
+        );
     }
 
     public function answerWithoutScore(Request $request, int $id): JsonResponse
@@ -139,8 +118,6 @@ class GameRoomController extends Controller {
 
     public function answer(Request $request, int $id): JsonResponse
     {
-        $game_score_key = 'buzzer:game:room:'.$id.':score';
-
         $question = $request->question;
         $is_correct = $request->is_correct;
         $team_id = (int) $request->team_id;
@@ -153,7 +130,7 @@ class GameRoomController extends Controller {
         }
 
         // Get scores of currently buzzed in users
-        $team_scores = collect(json_decode(Redis::get($game_score_key) ?? ''));
+        $team_scores = GameRoomHelper::get($id);
 
         if (!$team_scores->contains('team_id', $team_id)) {
             $team_score = (object)[
@@ -171,7 +148,7 @@ class GameRoomController extends Controller {
             });
         }
 
-        Redis::set($game_score_key, $team_scores->toJson());
+        GameRoomHelper::save($id, $team_scores);
 
         $questions_answered_key = 'game:room:'.$id.':questions:answered';
         $questions_answered = collect($questions_answered_key ? json_decode(Redis::get($questions_answered_key)) : []);
