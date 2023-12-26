@@ -20,7 +20,9 @@ export default function JoinRoom({ game } : { game: JoinGame } ) {
 
         post(route(`game.post`, {
             id: game.id
-        }));
+        }), {
+            replace: true
+        });
     };
 
     return (

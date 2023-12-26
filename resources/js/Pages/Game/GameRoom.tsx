@@ -156,23 +156,31 @@ export default function GameRoom(gameRoom: GameRoomType) {
     const listenerCallback = (data: any) => {
         const users = data.users as RedisUser[];
 
-        setUsersBuzzedIn(users);
-
         const fastest_user = users.reduce(function(prev, curr) {
             return prev.milliseconds_to_buzz_in < curr.milliseconds_to_buzz_in ? prev : curr;
         });
 
         setActiveTeamId(fastest_user.user_data.team.id);
 
-        // Loop in
+        // Alert host that team buzzed in
+        let currentUsersBuzzedIn = usersBuzzedIn;
+
         users.map((user) => {
+            if (currentUsersBuzzedIn.some((currentUserBuzzedIn) => currentUserBuzzedIn.user_data.team.id === user.user_data.team.id)) {
+                // Team buzzed in
+                return;
+            }
+
+            currentUsersBuzzedIn.push(user);
             api.info({
                 key: user.user_data.team.id,
                 placement: "topLeft",
-                message: `${user.order} - ${user.user_data.name} buzzed in (${user.user_data.team.team_name})`,
+                message: `${user.teamOrder} - ${user.user_data.name} buzzed in (${user.user_data.team.team_name})`,
                 duration: 0,
             });
-        })
+        });
+
+        setUsersBuzzedIn(currentUsersBuzzedIn);
     };
 
     return (

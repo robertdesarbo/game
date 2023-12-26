@@ -7,6 +7,7 @@ use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Broadcasting\Channel;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
+use App\Helpers\BuzzableHelper;
 
 class QuestionBuzzable implements ShouldBroadcastNow
 {
@@ -42,6 +43,8 @@ class QuestionBuzzable implements ShouldBroadcastNow
         if ($this->is_buzzable) {
             sleep(2);
         }
+
+        BuzzableHelper::save($this->game_room->id, collect()->push(['buzzable' => $this->is_buzzable]));
 
         return [
             "buzzable" => $this->is_buzzable,

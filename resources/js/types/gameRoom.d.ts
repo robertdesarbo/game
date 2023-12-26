@@ -63,4 +63,5 @@ export interface User {
 export interface Buzzer {
     gameRoom: GameRoom;
     user: User;
+    buzzable: boolean;
 }

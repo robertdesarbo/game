@@ -1,6 +1,6 @@
 import {Head, useForm} from "@inertiajs/react";
 import {Buzzer as BuzzerType} from "@/types/gameRoom";
-import { useState, useMemo } from "react";
+import {useState, useMemo, useEffect} from "react";
 import BuzzerListen from "@/Pages/Game/BuzzerListen";
 import BuzzableListen from "@/Pages/Game/BuzzableListen";
 import {Drawer, message} from "antd";
@@ -19,7 +19,13 @@ export default function Buzzer(buzzer: BuzzerType) {
     const [messageApi, contextHolder] = message.useMessage();
 
     const [buzzerEnabledTime, setBuzzerEnabledTime] = useState<number|null>(null);
-    const [buzzerStatus, setBuzzerStatus] = useState<BuzzerStatus>(BuzzerStatus.Disabled);
+    const [buzzerStatus, setBuzzerStatus] = useState<BuzzerStatus>(buzzer.buzzable ? BuzzerStatus.Enabled : BuzzerStatus.Disabled);
+
+    useEffect(() => {
+        if (buzzerStatus === BuzzerStatus.Enabled) {
+            setBuzzerEnabledTime(Date.now());
+        }
+    }, [buzzerStatus]);
 
     const submitBuzz = () => {
         if (buzzerStatus === BuzzerStatus.Disabled || buzzerStatus === BuzzerStatus.Clicked) {
@@ -45,9 +51,9 @@ export default function Buzzer(buzzer: BuzzerType) {
     };
 
     const BuzzableListenerCallback = (data: any) => {
+        console.log(data);
         if (data.buzzable) {
             setBuzzerStatus(BuzzerStatus.Enabled);
-            setBuzzerEnabledTime(Date.now());
         } else {
             setBuzzerStatus(BuzzerStatus.Disabled);
         }

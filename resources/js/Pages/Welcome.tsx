@@ -14,7 +14,7 @@ export default function Welcome({ auth, laravelVersion, phpVersion, userGameRoom
             {userGameRoom?.joined_room && userGameRoom?.game_room_id ? (
                 <GuestInGameLayout>
                     <div>
-                        <b>{userGameRoom?.name}</b> is currently on team <b>{userGameRoom?.team_name}</b>.
+                        <b>{userGameRoom?.name}</b> is currently on team <b>{userGameRoom?.team.team_name}</b>.
                     </div>
                     <Link
                         href={route('buzzer', {

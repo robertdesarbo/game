@@ -52,20 +52,17 @@ class Buzzer implements ShouldBroadcastNow
                 return $buzzed_user->user_data->team->team_name === $this->user->team->team_name;
             });
 
-            if (!$has_team_buzzed_in) {
-                // Make sure we only store 1 team buzzed in
-                $unique_users = $buzzer_users->unique('team_name');
+            // Helps prevent very laggy users from breaking order of already ranked buzzed in users
+            $extra_milliseconds = $buzzer_users->max('milliseconds_to_buzz_in') ?? 0;
 
-                // Helps prevent very laggy users from breaking order of already ranked buzzed in users
-                $extra_milliseconds = $buzzer_users->max('milliseconds_to_buzz_in') ?? 0;
+            // Save list of buzzed in users
+            // Remove duplicates of same team if they exist
+            BuzzerHelper::save($this->id, $buzzer_users->add([
+                'user_data' => $this->user,
+                'milliseconds_to_buzz_in' => $extra_milliseconds + $this->milliseconds_to_buzz_in,
+            ]));
 
-                // Save list of buzzed in users
-                // Remove duplicates of same team if they exist
-                BuzzerHelper::save($this->id, $unique_users->add([
-                    'user_data' => $this->user,
-                    'milliseconds_to_buzz_in' => $extra_milliseconds + $this->milliseconds_to_buzz_in,
-                ]));
-            } else {
+            if ($has_team_buzzed_in) {
                 // Let teammate know that a member buzzed in before them
             }
         });
@@ -76,11 +73,24 @@ class Buzzer implements ShouldBroadcastNow
             usleep(500 * 1000);
 
             // Order the buzzed in users
+            $teams_buzzer_winner = collect();
+
+            $nf = new NumberFormatter('en_US', NumberFormatter::ORDINAL);
             $ordered_users = BuzzerHelper::get($this->id)
                                 ->sortBy('milliseconds_to_buzz_in')
-                                ->map(function ($user, $key) {
-                                    $nf = new NumberFormatter('en_US', NumberFormatter::ORDINAL);
-                                    $nf->format($key);
+                                ->map(function ($user, $key) use ($nf, $teams_buzzer_winner) {
+
+                                    $winner = $teams_buzzer_winner->where('team_id', $user->user_data->team->id);
+                                    if ($winner->isEmpty()) {
+                                        $user->teamOrder = $nf->format($teams_buzzer_winner->count()+1);
+
+                                        $teams_buzzer_winner->push((object)[
+                                            'team_id' => $user->user_data->team->id,
+                                            'teamOrder' => $user->teamOrder
+                                        ]);
+                                    } else {
+                                        $user->teamOrder = $winner->first()->teamOrder;
+                                    }
 
                                     $user->order = $nf->format($key+1);
 
