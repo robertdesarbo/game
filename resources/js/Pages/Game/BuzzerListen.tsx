@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import {useEffect} from "react";
 import Echo from "laravel-echo";
 
 export default function BuzzerListen({id, listenerCallback}: {id: string, listenerCallback: any}) {
@@ -16,7 +16,9 @@ export default function BuzzerListen({id, listenerCallback}: {id: string, listen
             .listen(`.game.room.${id}.buzzer`, (data: any) => {
                 listenerCallback(data);
             });
-    }, []);
+
+        return () => echo.channel('buzzer').stopListening(`.game.room.${id}.buzzer`);
+    }, [listenerCallback]);
 
     return (
         <>

@@ -1,6 +1,6 @@
 import { Head } from "@inertiajs/react";
 import {GameRoom as GameRoomType, Question, RedisScore, RedisUser} from "@/types/gameRoom";
-import { useEffect, useState } from "react";
+import {useCallback, useEffect, useState} from "react";
 import { Modal, notification, Drawer, Statistic } from 'antd';
 import BuzzerListen from "@/Pages/Game/BuzzerListen";
 import { FocusScope } from 'react-aria';
@@ -31,6 +31,12 @@ export default function GameRoom(gameRoom: GameRoomType) {
 
         // Restore questions answered
         setQuestionsAnswered(gameRoom.questionsAnswered);
+
+        // Close buzzing
+        window.axios.post(route(`buzzable`, {
+            id: gameRoom.id,
+            is_buzzable: false,
+        }));
     }, []);
 
     useEffect(() => {
@@ -126,9 +132,9 @@ export default function GameRoom(gameRoom: GameRoomType) {
     }
 
     const showQuestion = (question: Question) => {
-        // Show Answer
         setShowAnswer(false);
         setQuestion(question);
+        setUsersBuzzedIn([]);
         setIsModalOpen(true);
 
         // Open up buzzing
@@ -153,7 +159,7 @@ export default function GameRoom(gameRoom: GameRoomType) {
         setIsModalOpen(false);
     };
 
-    const listenerCallback = (data: any) => {
+    const listenerCallback = useCallback((data: any) => {
         const users = data.users as RedisUser[];
 
         const fastest_user = users.reduce(function(prev, curr) {
@@ -181,7 +187,9 @@ export default function GameRoom(gameRoom: GameRoomType) {
         });
 
         setUsersBuzzedIn(currentUsersBuzzedIn);
-    };
+    },[
+        usersBuzzedIn.length
+    ]);
 
     return (
         <FocusScope restoreFocus autoFocus>

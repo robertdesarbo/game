@@ -16,7 +16,9 @@ export default function BuzzableListen({id, listenerCallback}: {id: string, list
             .listen(`.game.room.${id}.question.buzzable`, (data: any) => {
                 listenerCallback(data);
             });
-    }, []);
+
+        return () => echo.channel('buzzable').stopListening(`.game.room.${id}.question.buzzable`);
+    }, [listenerCallback]);
 
     return (
         <>
