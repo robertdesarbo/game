@@ -18,7 +18,7 @@ export default function Dashboard({ auth, gameRooms }: PageProps<{ gameRooms: Ga
             <div className="flex flex-col space-y-4 w-full my-6">
                 {gameRooms.map((gameRoom) => {
                     return (
-                        <div className="w-4/5 m-auto sm:px-6 lg:px-8">
+                        <div className="w-full md:w-4/5 m-auto px-4 md::px-8">
                             <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                                 <div className="p-6 text-gray-900">
                                     <Title underline={true} level={5}>Room #{gameRoom.id}</Title>
