@@ -17,7 +17,9 @@ export default function BuzzerListen({id, listenerCallback}: {id: string, listen
                 listenerCallback(data);
             });
 
-        return () => echo.channel('buzzer').stopListening(`.game.room.${id}.buzzer`);
+        return () => {
+            echo.channel('buzzer').stopListening(`.game.room.${id}.buzzer`);
+        }
     }, [listenerCallback]);
 
     return (
