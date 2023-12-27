@@ -43,7 +43,7 @@ export interface Question {
 export interface UserGameRoom {
     joined_room: boolean;
     game_room_id: string;
-    team_name: string;
+    team: Team[];
     name: string;
 }
 
