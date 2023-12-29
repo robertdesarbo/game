@@ -2,7 +2,8 @@
 
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\HomeController;
-use App\Http\Controllers\GameRoomController;
+use App\Http\Controllers\HostGameRoomController;
+use App\Http\Controllers\PlayerGameRoomController;
 use App\Http\Controllers\DashboardController;
 use Illuminate\Support\Facades\Route;
 
@@ -31,26 +32,26 @@ Route::middleware('auth')->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
-    Route::get('/game/{id}', [GameRoomController::class, '__invoke'])
+    Route::get('/game/{id}', [HostGameRoomController::class, '__invoke'])
         ->name('game');
-    Route::post('/game/{id}/buzzable', [GameRoomController::class, 'buzzable'])
+    Route::post('/game/{id}/buzzable', [HostGameRoomController::class, 'buzzable'])
         ->name('buzzable');
-    Route::post('/game/{id}/answer', [GameRoomController::class, 'answer'])
+    Route::post('/game/{id}/answer', [HostGameRoomController::class, 'answer'])
         ->name('answer');
-    Route::post('/game/{id}/answerWithoutScore', [GameRoomController::class, 'answerWithoutScore'])
+    Route::post('/game/{id}/answerWithoutScore', [HostGameRoomController::class, 'answerWithoutScore'])
         ->name('answerWithoutScore');
 });
 
 Route::middleware('game.room.valid')->group(function () {
-    Route::post('/game/{id}', [GameRoomController::class, 'joinRoom'])
+    Route::post('/game/{id}', [PlayerGameRoomController::class, 'joinRoom'])
         ->name('game.post');
 
-    Route::get('/game/{id}/buzzer', [GameRoomController::class, 'buzzer'])
+    Route::get('/game/{id}/buzzer', [PlayerGameRoomController::class, 'buzzer'])
         ->name('buzzer');
-    Route::post('/game/{id}/buzzer', [GameRoomController::class, 'incomingBuzzer'])
+    Route::post('/game/{id}/buzzer', [PlayerGameRoomController::class, 'incomingBuzzer'])
         ->name('buzzer.update');
 
-    Route::post('/game/{id}/leave', [GameRoomController::class, 'leave'])
+    Route::post('/game/{id}/leave', [PlayerGameRoomController::class, 'leave'])
         ->name('leave');
 });
 

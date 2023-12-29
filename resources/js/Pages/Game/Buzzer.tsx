@@ -1,9 +1,9 @@
-import {Head, useForm} from "@inertiajs/react";
-import {Buzzer as BuzzerType} from "@/types/gameRoom";
-import {useState, useMemo, useEffect} from "react";
+import {Head} from "@inertiajs/react";
+import {Buzzer as BuzzerType, RedisUser} from "@/types/gameRoom";
+import {useState, useMemo, useEffect, useCallback} from "react";
 import BuzzerListen from "@/Pages/Game/BuzzerListen";
 import BuzzableListen from "@/Pages/Game/BuzzableListen";
-import {Drawer, message} from "antd";
+import {Drawer, message, notification} from 'antd';
 
 export enum BuzzerStatus {
     Enabled,
@@ -12,14 +12,13 @@ export enum BuzzerStatus {
 }
 
 export default function Buzzer(buzzer: BuzzerType) {
-    const { post } = useForm({
-        id: buzzer.gameRoom.id,
-    });
-
-    const [messageApi, contextHolder] = message.useMessage();
+    const [messageApi, messageContextHolder] = message.useMessage();
+    const [notificationApi, notificationContextHolder] = notification.useNotification();
 
     const [buzzerEnabledTime, setBuzzerEnabledTime] = useState<number|null>(null);
     const [buzzerStatus, setBuzzerStatus] = useState<BuzzerStatus>(buzzer.buzzable ? BuzzerStatus.Enabled : BuzzerStatus.Disabled);
+
+    const [usersBuzzedIn, setUsersBuzzedIn] = useState<RedisUser[]>([]);
 
     useEffect(() => {
         if (buzzerStatus === BuzzerStatus.Enabled) {
@@ -46,16 +45,44 @@ export default function Buzzer(buzzer: BuzzerType) {
         });
     };
 
-    const BuzzerListenerCallback = (data: any) => {
-        //
-    };
+    const BuzzerListenerCallback = useCallback((data: any) => {
+        const users = data.users as RedisUser[];
+
+        // Alert host that team buzzed in
+        let currentUsersBuzzedIn = usersBuzzedIn;
+
+        users.map((user) => {
+            if (
+                currentUsersBuzzedIn.some((currentUserBuzzedIn) => currentUserBuzzedIn.user_data.name === user.user_data.name)
+                || buzzer.user.name === user.user_data.name
+            ) {
+                // Already showed user buzzed in
+                // Ignore this user
+                console.log('ignored');
+                return;
+            }
+
+            currentUsersBuzzedIn.push(user);
+
+            notificationApi.info({
+                key: user.user_data.team.id,
+                placement: "topRight",
+                message: `${user.teamOrder} - ${user.user_data.name} buzzed in (${user.user_data.team.team_name})`,
+                duration: 5,
+            });
+        });
+
+        setUsersBuzzedIn(currentUsersBuzzedIn);
+    },[
+        usersBuzzedIn.length
+    ]);
 
     const BuzzableListenerCallback = (data: any) => {
-        console.log(data);
         if (data.buzzable) {
             setBuzzerStatus(BuzzerStatus.Enabled);
         } else {
             setBuzzerStatus(BuzzerStatus.Disabled);
+            setUsersBuzzedIn([]);
         }
     };
 
@@ -74,7 +101,8 @@ export default function Buzzer(buzzer: BuzzerType) {
             <Head title="Game Room"/>
             <BuzzerListen id={buzzer.gameRoom.id} listenerCallback={BuzzerListenerCallback}/>
             <BuzzableListen id={buzzer.gameRoom.id} listenerCallback={BuzzableListenerCallback}/>
-            {contextHolder}
+            { messageContextHolder }
+            { notificationContextHolder }
             <form
                 className={`h-screen w-screen transition duration-150 ease-out ${buzzerBackgroundClass}`}
                 onClick={() => {submitBuzz()}}

@@ -16,7 +16,7 @@ use Illuminate\Http\JsonResponse;
 use Inertia\Inertia;
 use Inertia\Response;
 
-class GameRoomController extends Controller {
+class HostGameRoomController extends Controller {
     public function __invoke(Request $request, int $id): Response
     {
         $game_room = GameRoom::with(['universe', 'teams'])
@@ -33,48 +33,6 @@ class GameRoomController extends Controller {
         ]);
     }
 
-    public function leave(Request $request): RedirectResponse
-    {
-        $request->session()->invalidate();
-
-        $request->session()->regenerateToken();
-
-        return redirect('/')->withCookie(\Cookie::forget('game_room_jwt'));
-    }
-
-    public function joinRoom(Request $request, int $id): RedirectResponse
-    {
-        $request->validate([
-            'team_id' => 'required|exists:App\Models\GameRoomTeam,id',
-        ]);
-
-        $game_room_team = GameRoomTeam::where('id', $request->get('team_id'))->first();
-
-        // Update JWT
-        $payload = [
-            'joined_room' => true,
-            'game_room_id' => $id,
-            'team' => $game_room_team,
-            'name'  => $request->get('name'),
-        ];
-
-        return redirect()->route('buzzer', ['id' => $id])
-            ->withCookie(
-                'game_room_jwt', JWT::encode($payload, env('JWT_SECRET_KEY'), 'HS256')
-            );
-    }
-
-    public function buzzer(Request $request, int $id): Response
-    {
-        $game_room = GameRoom::where('id', $id)->first();
-
-        return Inertia::render('Game/Buzzer', [
-            'gameRoom' => $game_room,
-            'user' => json_decode($request->get('user')),
-            'buzzable' => BuzzableHelper::get($id)->contains('buzzable', true)
-        ]);
-    }
-
     public function buzzable(Request $request, int $id): void
     {
         // Clear buzzer queue
@@ -84,13 +42,6 @@ class GameRoomController extends Controller {
         $game_room = GameRoom::where('id', $id) ->first();
 
         QuestionBuzzable::dispatch($game_room, (bool) $request->get('is_buzzable'));
-    }
-
-    public function incomingBuzzer(Request $request, int $id): void {
-        Buzzer::dispatch($id,
-            json_decode($request->get('user')),
-            $request->get('buzzer_submitted_milliseconds') - $request->get('buzzer_enabled_milliseconds')
-        );
     }
 
     public function answerWithoutScore(Request $request, int $id): JsonResponse
