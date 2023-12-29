@@ -20,6 +20,10 @@
     RewriteRule ^ index.php [L]
 
     RewriteEngine On
-    RewriteCond %{HTTP_HOST} !^www\. [NC]
+
+    RewriteCond %{HTTPS} !=on
+    RewriteRule ^(.*)$ https://%{HTTP_HOST}/$1 [L,R=301]
+
+    RewriteCond %{HTTP_HOST} !^www\.
     RewriteRule ^(.*)$ https://www.%{HTTP_HOST}/$1 [R=301,L]
 </IfModule>
