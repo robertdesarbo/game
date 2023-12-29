@@ -13,7 +13,9 @@ export enum BuzzerStatus {
 
 export default function Buzzer(buzzer: BuzzerType) {
     const [messageApi, messageContextHolder] = message.useMessage();
-    const [notificationApi, notificationContextHolder] = notification.useNotification();
+    const [notificationApi, notificationContextHolder] = notification.useNotification({
+        bottom: 75,
+    });
 
     const [buzzerEnabledTime, setBuzzerEnabledTime] = useState<number|null>(null);
     const [buzzerStatus, setBuzzerStatus] = useState<BuzzerStatus>(buzzer.buzzable ? BuzzerStatus.Enabled : BuzzerStatus.Disabled);
@@ -58,17 +60,18 @@ export default function Buzzer(buzzer: BuzzerType) {
             ) {
                 // Already showed user buzzed in
                 // Ignore this user
-                console.log('ignored');
                 return;
             }
 
             currentUsersBuzzedIn.push(user);
 
-            notificationApi.info({
+            notificationApi.warning({
                 key: user.user_data.team.id,
-                placement: "topRight",
-                message: `${user.teamOrder} - ${user.user_data.name} buzzed in (${user.user_data.team.team_name})`,
+                placement: "bottomRight",
+                message: `${user.user_data.team.team_name}`,
+                description: `${user.user_data.name} buzzed in ${user.order}`,
                 duration: 5,
+                closeIcon: false
             });
         });
 

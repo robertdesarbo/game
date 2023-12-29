@@ -18,7 +18,7 @@ export default function GameRoom(gameRoom: GameRoomType) {
     const [isDrawerOpen, setIsDrawerOpen] = useState(false);
     const [teamScore, setTeamScore] = useState<RedisScore|null>(null);
 
-    const [api, contextHolder] = notification.useNotification({stack: false});
+    const [notificationApi, contextHolder] = notification.useNotification({stack: false});
 
     useEffect(() => {
         // Restore the score
@@ -72,7 +72,7 @@ export default function GameRoom(gameRoom: GameRoomType) {
                 setQuestionsAnswered(response.questionsAnswered);
 
                 // Close all notifications
-                api.destroy();
+                notificationApi.destroy();
             });
 
         } else if (event.shiftKey && event.key === 'W') {
@@ -97,7 +97,7 @@ export default function GameRoom(gameRoom: GameRoomType) {
                 }));
 
                 // Close this teams notification
-                api.destroy(activeTeamId);
+                notificationApi.destroy(activeTeamId);
 
                 // Set next team as active
                 setUsersBuzzedIn((previousUsersBuzzedIn) => {
@@ -151,7 +151,7 @@ export default function GameRoom(gameRoom: GameRoomType) {
             is_buzzable: false,
         }));
 
-        api.destroy();
+        notificationApi.destroy();
 
         setQuestion(undefined);
         setActiveTeamId(null);
@@ -178,11 +178,12 @@ export default function GameRoom(gameRoom: GameRoomType) {
             }
 
             currentUsersBuzzedIn.push(user);
-            api.info({
+            notificationApi.info({
                 key: user.user_data.team.id,
                 placement: "topLeft",
                 message: `${user.teamOrder} - ${user.user_data.name} buzzed in (${user.user_data.team.team_name})`,
                 duration: 0,
+                closeIcon: false
             });
         });
 
